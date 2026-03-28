@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 50%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Dashboard</h2>
+
+<button onclick="addExercise()">Add Exercise</button>
+
+<table id="planTable">
+    <tr>
+        <th>Exercise</th>
+        <th>Time</th>
+        <th>Muscles Hit</th>
+    </tr>
+    <tr>
+        <td contenteditable="true">...</td>
+        <td contenteditable="true">...</td>
+        <td contenteditable="true">...</td>
+    </tr>
+</table>
+
+<script>
+function addExercise() {
+    let table = document.getElementById("planTable");
+    let rowCount = table.rows.length;
+    let colCount = table.rows[0].cells.length;
+
+    let newRow = table.insertRow(rowCount);
+
+    for (let i = 0; i < colCount; i++) {
+        let newCell = newRow.insertCell(i);
+        newCell.contentEditable = "true";
+        newCell.innerText = "...";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -4,6 +4,8 @@ import sqlite3
 connection = sqlite3.connect("workout_planner.db")
 cursor = connection.cursor()
 
+plan_id = 1  
+
 # One user can have many workout_plans
 # One workout_plan can have many workout_exercises
 # One exercise can appear in many workout_exercises
@@ -15,9 +17,8 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
-    email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL
-);
+)
 """)
 
 # Creates workout plans
@@ -25,9 +26,20 @@ cursor.execute("""
 CREATE TABLE workout_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     plan_name TEXT NOT NULL,
-    notes TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
+)
+""")
+
+# Creates workout exercises 
+cursor.execute("""
+CREATE TABLE workout_exercises (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id INTEGER NOT NULL,
+    exercise_id INTEGER NOT NULL,
+    duration_minutes INTEGER,
+    FOREIGN KEY (plan_id) REFERENCES workout_plans(id),
+    FOREIGN KEY (exercise_id) REFERENCES exercises(id)
+)
 """)
 
 # Creates exercises 
@@ -35,10 +47,20 @@ cursor.execute("""
 CREATE TABLE exercises (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     exercise_name TEXT NOT NULL,
-    muscles_worked TEXT NOT NULL,
-    description TEXT
-);
+    muscles_worked TEXT NOT NULL
+)
 """)
+
+cursor.execute("""
+SELECT SUM(duration_minutes)
+FROM workout_exercises
+WHERE plan_id = ?
+""", (plan_id,))
+
+result = cursor.fetchone()[0]
+
+
+total_duration = result if result is not None else 0
 
 # connection commit and close
 connection.commit()
