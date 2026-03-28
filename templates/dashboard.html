@@ -1,58 +1,378 @@
-
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Workout Dashboard</title>
     <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #e9e9e9;
+            border-right: 1px solid #bbb;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+        }
+
+        .sidebar input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .sidebar button {
+            padding: 10px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .plan-item {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .plan-item.active {
+            background: #cddbef;
+            font-weight: bold;
+        }
+
+        .plan-name {
+            display: block;
+            width: 100%;
+            outline: none;
+        }
+
+        .main {
+            flex: 1;
+            padding: 35px 25px;
+            box-sizing: border-box;
+        }
+
+        .main h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            display: inline-block;
+            padding: 6px 10px;
+            border: 1px dashed transparent;
+        }
+
+        .main h1:focus {
+            outline: none;
+            border: 1px dashed #888;
+            background: #fff;
+        }
+
         table {
             border-collapse: collapse;
-            width: 50%;
+            width: 80%;
+            background: white;
         }
 
         th, td {
             border: 1px solid black;
-            padding: 8px;
+            padding: 10px;
             text-align: center;
+            min-width: 120px;
         }
 
         button {
-            margin: 5px;
-            padding: 8px 12px;
+            margin: 5px 5px 15px 0;
+            padding: 10px 16px;
+            cursor: pointer;
+        }
+
+        .total-time {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<h2>Dashboard</h2>
+<div class="container">
+    <div class="sidebar">
+        <h2>My Plans</h2>
+        <input type="text" id="newPlanName" placeholder="Plan name">
+        <button onclick="addPlan()">Add Plan</button>
+        <button onclick="deletePlan()">Delete Plan</button>
 
-<button onclick="addExercise()">Add Exercise</button>
+        <div id="plansList"></div>
+    </div>
 
-<table id="planTable">
-    <tr>
-        <th>Exercise</th>
-        <th>Time</th>
-        <th>Muscles Hit</th>
-    </tr>
-    <tr>
-        <td contenteditable="true">...</td>
-        <td contenteditable="true">...</td>
-        <td contenteditable="true">...</td>
-    </tr>
-</table>
+    <div class="main">
+        <h1 id="dashboardTitle" contenteditable="true" oninput="renameCurrentPlanFromTitle()">My First Plan</h1>
+        <br>
+
+        <button onclick="addExercise()">Add Exercise</button>
+        <button onclick="deleteExercise()">Delete Last Exercise</button>
+
+        <table id="planTable">
+            <tr>
+                <th>Exercise</th>
+                <th>Time</th>
+                <th>Muscles Hit</th>
+            </tr>
+        </table>
+
+        <div class="total-time">
+            Total Time: <span id="totalTime">0</span> minutes
+        </div>
+    </div>
+</div>
 
 <script>
-function addExercise() {
-    let table = document.getElementById("planTable");
-    let rowCount = table.rows.length;
-    let colCount = table.rows[0].cells.length;
+const USER_ID = "{{ user_id }}";
+let plans = [];
+let currentPlanIndex = 0;
 
-    let newRow = table.insertRow(rowCount);
+function savePlans() {
+    localStorage.setItem("plans", JSON.stringify(plans));
+    localStorage.setItem("currentPlanIndex", currentPlanIndex);
+}
 
-    for (let i = 0; i < colCount; i++) {
-        let newCell = newRow.insertCell(i);
-        newCell.contentEditable = "true";
-        newCell.innerText = "...";
+function loadPlans() {
+    let savedPlans = JSON.parse(localStorage.getItem("plans"));
+    let savedIndex = parseInt(localStorage.getItem("currentPlanIndex"));
+
+    if (savedPlans && savedPlans.length > 0) {
+        plans = savedPlans;
+        currentPlanIndex = isNaN(savedIndex) ? 0 : savedIndex;
+
+        if (currentPlanIndex >= plans.length) {
+            currentPlanIndex = 0;
+        }
+    } else {
+        plans = [
+            {
+                name: "My First Plan",
+                exercises: [["...", "0", "..."]]
+            }
+        ];
+        currentPlanIndex = 0;
+    }
+
+    renderPlansList();
+    renderCurrentPlan();
+}
+
+function renderPlansList() {
+    let plansList = document.getElementById("plansList");
+    plansList.innerHTML = "";
+
+    for (let i = 0; i < plans.length; i++) {
+        let planDiv = document.createElement("div");
+        planDiv.className = "plan-item";
+
+        if (i === currentPlanIndex) {
+            planDiv.classList.add("active");
+        }
+
+        planDiv.onclick = function(e) {
+            if (e.target.classList.contains("plan-name")) return;
+            currentPlanIndex = i;
+            savePlans();
+            renderPlansList();
+            renderCurrentPlan();
+        };
+
+        let planName = document.createElement("span");
+        planName.className = "plan-name";
+        planName.contentEditable = "true";
+        planName.innerText = plans[i].name;
+
+        planName.onclick = function(e) {
+            e.stopPropagation();
+        };
+
+        planName.onfocus = function() {
+            currentPlanIndex = i;
+            savePlans();
+            renderPlansList();
+            renderCurrentPlan();
+        };
+
+        planName.oninput = function() {
+            let newName = planName.innerText.trim();
+
+            if (newName === "") {
+                plans[i].name = "Untitled Plan";
+            } else {
+                plans[i].name = newName;
+            }
+
+            savePlans();
+
+            if (i === currentPlanIndex) {
+                document.getElementById("dashboardTitle").innerText = plans[i].name;
+            }
+        };
+
+        planName.onkeydown = function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                planName.blur();
+            }
+        };
+
+        planName.onblur = function() {
+            let cleanedName = planName.innerText.trim();
+
+            if (cleanedName === "") {
+                cleanedName = "Untitled Plan";
+            }
+
+            plans[i].name = cleanedName;
+            savePlans();
+            renderPlansList();
+
+            if (i === currentPlanIndex) {
+                document.getElementById("dashboardTitle").innerText = cleanedName;
+            }
+        };
+
+        planDiv.appendChild(planName);
+        plansList.appendChild(planDiv);
     }
 }
+
+function renderCurrentPlan() {
+    let table = document.getElementById("planTable");
+    let currentPlan = plans[currentPlanIndex];
+
+    document.getElementById("dashboardTitle").innerText = currentPlan.name;
+
+    table.innerHTML = `
+        <tr>
+            <th>Exercise</th>
+            <th>Time</th>
+            <th>Muscles Hit</th>
+        </tr>
+    `;
+
+    for (let i = 0; i < currentPlan.exercises.length; i++) {
+        let row = table.insertRow();
+        let rowData = currentPlan.exercises[i];
+
+        for (let j = 0; j < rowData.length; j++) {
+            let cell = row.insertCell(j);
+            cell.contentEditable = "true";
+            cell.innerText = rowData[j];
+            cell.setAttribute("oninput", `updateCell(${i}, ${j}, this.innerText)`);
+        }
+    }
+
+    updateTotalTime();
+}
+
+function updateCell(rowIndex, cellIndex, value) {
+    plans[currentPlanIndex].exercises[rowIndex][cellIndex] = value;
+    savePlans();
+    updateTotalTime();
+}
+
+function addPlan() {
+    let input = document.getElementById("newPlanName");
+    let planName = input.value.trim();
+
+    if (planName == "") {
+        planName = "New Plan";
+    }
+
+    plans.push({
+        name: planName,
+        exercises: [["...", "0", "..."]]
+    });
+
+    currentPlanIndex = plans.length - 1;
+    input.value = "";
+
+    savePlans();
+    renderPlansList();
+    renderCurrentPlan();
+}
+
+function deletePlan() {
+    if (plans.length <= 1) {
+        alert("You must keep at least one plan.");
+        return;
+    }
+
+    plans.splice(currentPlanIndex, 1);
+
+    if (currentPlanIndex >= plans.length) {
+        currentPlanIndex = plans.length - 1;
+    }
+
+    savePlans();
+    renderPlansList();
+    renderCurrentPlan();
+}
+
+function renameCurrentPlanFromTitle() {
+    let newName = document.getElementById("dashboardTitle").innerText.trim();
+
+    if (newName === "") {
+        newName = "Untitled Plan";
+        document.getElementById("dashboardTitle").innerText = newName;
+    }
+
+    plans[currentPlanIndex].name = newName;
+    savePlans();
+    renderPlansList();
+}
+
+function addExercise() {
+    plans[currentPlanIndex].exercises.push(["...", "0", "..."]);
+    savePlans();
+    renderCurrentPlan();
+}
+
+function deleteExercise() {
+    let exercises = plans[currentPlanIndex].exercises;
+
+    if (exercises.length > 1) {
+        exercises.pop();
+    }
+
+    savePlans();
+    renderCurrentPlan();
+}
+
+function updateTotalTime() {
+    let currentPlan = plans[currentPlanIndex];
+    let total = 0;
+
+    for (let i = 0; i < currentPlan.exercises.length; i++) {
+        let timeValue = parseInt(currentPlan.exercises[i][1]);
+
+        if (!isNaN(timeValue)) {
+            total += timeValue;
+        }
+    }
+
+    document.getElementById("totalTime").innerText = total;
+}
+
+window.onload = loadPlans;
 </script>
 
 </body>

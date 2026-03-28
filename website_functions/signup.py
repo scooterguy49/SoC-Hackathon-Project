@@ -1,6 +1,7 @@
 from app import app
 from flask import request, redirect, render_template
 import sqlite3
+import bcrypt
 
 DB = "workout_planner.db"
 
@@ -18,9 +19,10 @@ def signup():
         cur = conn.cursor()
 
         try:
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
             cur.execute(
                 "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                (username, password)
+                (username, hashed)
             )
             conn.commit()
 

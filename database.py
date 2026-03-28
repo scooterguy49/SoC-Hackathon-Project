@@ -24,8 +24,10 @@ CREATE TABLE IF NOT EXISTS users (
 cursor.execute("""
 CREATE TABLE workout_plans (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
     plan_name TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 )
 """)
 
@@ -49,6 +51,8 @@ CREATE TABLE exercises (
     muscles_worked TEXT NOT NULL
 )
 """)
+
+
 
 # connection commit and close
 connection.commit()

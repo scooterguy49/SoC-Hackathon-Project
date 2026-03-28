@@ -1,6 +1,7 @@
 from app import app
 from flask import request, redirect, session, render_template
 import sqlite3
+import bcrypt
 
 # defines database
 DB = "workout_planner.db"
@@ -32,8 +33,8 @@ def login():
         conn.close()
 
         # Check if user exists AND password matches
-        if user and user[2] == password:
-            session["user_id"] = user[0]  # log them in
+        if user and bcrypt.checkpw(password.encode(), user[2]):
+            session["user_id"] = user[0]
             return redirect("/dashboard")
         else:
             return "Invalid login"
