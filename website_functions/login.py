@@ -7,7 +7,7 @@ DB = "workout_planner.db"
 
 # creates and returns database 
 def get_db():
-    return sqlite3.connect(DB)
+    return sqlite3.connect(DB, check_same_thread=False)
 
 
 # "/login " is a url for website. GET shows form, POST processes form

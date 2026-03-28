@@ -3,8 +3,7 @@ import sqlite3
 # connection and cursor setup
 connection = sqlite3.connect("workout_planner.db")
 cursor = connection.cursor()
-
-plan_id = 1  
+ 
 
 # One user can have many workout_plans
 # One workout_plan can have many workout_exercises
@@ -50,17 +49,6 @@ CREATE TABLE exercises (
     muscles_worked TEXT NOT NULL
 )
 """)
-
-cursor.execute("""
-SELECT SUM(duration_minutes)
-FROM workout_exercises
-WHERE plan_id = ?
-""", (plan_id,))
-
-result = cursor.fetchone()[0]
-
-
-total_duration = result if result is not None else 0
 
 # connection commit and close
 connection.commit()

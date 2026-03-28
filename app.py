@@ -10,13 +10,13 @@ app.secret_key = "secret_key"
 
 # used to connect to the database
 def get_db_connection():
-    connection = sqlite3.connect(DATABASE)
+    connection = sqlite3.connect(DATABASE, check_same_thread=False)
     connection.row_factory = sqlite3.Row
     return connection
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("signup.html")
 
 
 # ----------------
@@ -27,7 +27,7 @@ def get_users():
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    cursor.execute("SELECT id, username, email FROM users")
+    cursor.execute("SELECT id, username")
     users = cursor.fetchall()
 
     connection.close()
@@ -40,27 +40,26 @@ def create_user():
     data = request.get_json()
 
     username = data.get("username")
-    email = data.get("email")
     password_hash = data.get("password_hash")
 
-    if not username or not email or not password_hash:
-        return jsonify({"error": "username, email, and password_hash are required"}), 400
+    if not username or not password_hash:
+        return jsonify({"error": "username, and password_hash are required"}), 400
 
     connection = get_db_connection()
     cursor = connection.cursor()
 
     try:
         cursor.execute("""
-            INSERT INTO users (username, email, password_hash)
+            INSERT INTO users (username, password_hash)
             VALUES (?, ?, ?)
-        """, (username, email, password_hash))
+        """, (username, password_hash))
 
         connection.commit()
         new_id = cursor.lastrowid
 
     except sqlite3.IntegrityError:
         connection.close()
-        return jsonify({"error": "Username or email already exists"}), 400
+        return jsonify({"error": "Username already exists"}), 400
 
     connection.close()
 
@@ -263,4 +262,4 @@ def get_total_duration(plan_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
