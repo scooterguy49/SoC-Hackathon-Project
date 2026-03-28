@@ -124,8 +124,9 @@
 
         <button onclick="addExercise()">Add Exercise</button>
         <button onclick="deleteExercise()">Delete Last Exercise</button>
+        <a href="/signup">Sign Up</a>
 
-        <table id="planTable">
+        <table id="planTable"> 
             <tr>
                 <th>Exercise</th>
                 <th>Time</th>
@@ -144,14 +145,22 @@ const USER_ID = "{{ user_id }}";
 let plans = [];
 let currentPlanIndex = 0;
 
+function plansKey() {
+    return `plans_${USER_ID}`;
+}
+
+function currentPlanKey() {
+    return `currentPlanIndex_${USER_ID}`;
+}
+
 function savePlans() {
-    localStorage.setItem("plans", JSON.stringify(plans));
-    localStorage.setItem("currentPlanIndex", currentPlanIndex);
+    localStorage.setItem(plansKey(), JSON.stringify(plans));
+    localStorage.setItem(currentPlanKey(), currentPlanIndex);
 }
 
 function loadPlans() {
-    let savedPlans = JSON.parse(localStorage.getItem("plans"));
-    let savedIndex = parseInt(localStorage.getItem("currentPlanIndex"));
+    let savedPlans = JSON.parse(localStorage.getItem(plansKey()));
+    let savedIndex = parseInt(localStorage.getItem(currentPlanKey()));
 
     if (savedPlans && savedPlans.length > 0) {
         plans = savedPlans;

@@ -12,7 +12,7 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", user_id=session["user_id"])
 
 
 @app.route("/dashboard/save", methods=["POST"])
